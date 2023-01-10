@@ -1,8 +1,12 @@
 package tw.com.stchanga.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import tw.com.stchanga.constant.ProductCategory;
 import tw.com.stchanga.dao.ProductDao;
 import tw.com.stchanga.dto.ProductRequest;
 import tw.com.stchanga.model.Product;
@@ -12,6 +16,12 @@ public class ProductServiceImpl implements ProductService{
 	
 	@Autowired
 	private ProductDao productDao;
+	
+	@Override
+	public List<Product> getProducts(ProductCategory category,String search) {
+		
+		return productDao.getProducts(category,search);
+	}
 	
 	@Override
 	public Product getProductById(Integer productId) {
@@ -31,5 +41,13 @@ public class ProductServiceImpl implements ProductService{
 		
 		
 	}
+
+	@Override
+	public void deleteProduct(Integer productId) {
+		// TODO Auto-generated method stub
+		productDao.deleteProduct(productId);
+	}
+
+	
 
 }

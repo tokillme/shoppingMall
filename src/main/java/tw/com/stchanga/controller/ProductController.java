@@ -3,10 +3,13 @@ package tw.com.stchanga.controller;
 import java.util.List;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,10 +20,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import tw.com.stchanga.constant.ProductCategory;
+import tw.com.stchanga.dto.ProductQueryParams;
 import tw.com.stchanga.dto.ProductRequest;
 import tw.com.stchanga.model.Product;
 import tw.com.stchanga.service.ProductService;
+import tw.com.stchanga.util.Page;
 
+@Validated
 @RestController
 public class ProductController {
 	
@@ -29,14 +35,42 @@ public class ProductController {
 	
 	
 	@GetMapping("/products")
-	public ResponseEntity<List<Product>> getProduct(
+	public ResponseEntity<Page<Product>> getProduct(
+				//search Filtering
 				@RequestParam(required = false) ProductCategory category,
-				@RequestParam(required = false) String search
+				@RequestParam(required = false) String search,
+				
+				//Sorting
+				@RequestParam(defaultValue = "created_date") String orderBy,
+				@RequestParam(defaultValue = "desc") String sort,
+				
+				//HTML pagination
+				@RequestParam(defaultValue = "5") @Max(1000) @Min(0) Integer limit,
+				@RequestParam(defaultValue = "0") @Min(0) Integer offset
+				
 			){
+		ProductQueryParams productQueryParams=new ProductQueryParams();
+		productQueryParams.setCategory(category);
+		productQueryParams.setSearch(search);
+		productQueryParams.setOrderBy(orderBy);
+		productQueryParams.setSort(sort);
+		productQueryParams.setLimit(limit);
+		productQueryParams.setOffset(offset);
 		
-		List<Product> productList = productService.getProducts(category,search);
+		// product list
+		List<Product> productList = productService.getProducts(productQueryParams);
 		
-		return ResponseEntity.status(HttpStatus.OK).body(productList);
+		// product total
+		Integer total=productService.countProduct(productQueryParams);
+		
+		// paging
+		Page<Product> page=new Page<>();
+		page.setLimit(limit);
+		page.setOffset(offset);
+		page.setTotal(total);
+		page.setResults(productList);
+		
+		return ResponseEntity.status(HttpStatus.OK).body(page);
 		
 	}
 	

@@ -14,6 +14,7 @@ import org.springframework.objenesis.instantiator.basic.NewInstanceInstantiator;
 import org.springframework.stereotype.Component;
 
 import tw.com.stchanga.constant.ProductCategory;
+import tw.com.stchanga.dto.ProductQueryParams;
 import tw.com.stchanga.dto.ProductRequest;
 import tw.com.stchanga.model.Product;
 import tw.com.stchanga.rowmapper.ProductRowMapper;
@@ -24,22 +25,40 @@ public class ProductDaoImpl implements ProductDao{
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 	
 	@Override
-	public List<Product> getProducts(ProductCategory category,String search) {
+	public Integer countProduct(ProductQueryParams productQueryParams) {
+		String sql="SELECT count(*) FROM product WHERE 1=1";
+		
+		Map<String,Object> map=new HashMap<>();
+		
+		//search condition
+		sql=addFilteringSql(sql, map, productQueryParams);
+		
+		Integer total=namedParameterJdbcTemplate.queryForObject(sql, map, Integer.class);
+		
+		
+		return total;
+	}
+
+	
+	
+	@Override
+	public List<Product> getProducts(ProductQueryParams productQueryParams) {
 		String sql="SELECT product_id,product_name,category,"
 				+ "image_url,price,stock,description,created_date,"
 				+ "last_modified_date FROM product WHERE 1=1";
 		
 		Map<String, Object> map=new HashMap<>();
 		
-		if(category != null) {
-			sql=sql+" AND category=:category";
-			map.put("category", category.name());
-		}
+		//search condition
+		sql=addFilteringSql(sql, map, productQueryParams);
 		
-		if(search !=null) {
-			sql=sql + " AND product_name LIKE :search";
-			map.put("search", "%"+search+"%");
-		}
+		//sorter
+		sql=sql + " ORDER BY " + productQueryParams.getOrderBy()+" "+productQueryParams.getSort();
+		
+		sql=sql + " LIMIT :limit OFFSET :offset"; //after ORDER BY
+		map.put("limit", productQueryParams.getLimit());
+		map.put("offset", productQueryParams.getOffset());
+		
 		
 		List<Product> productList=namedParameterJdbcTemplate.query(sql, map,new ProductRowMapper());
 		
@@ -129,7 +148,23 @@ public class ProductDaoImpl implements ProductDao{
 		namedParameterJdbcTemplate.update(sql, map);
 		
 	}
+	
+	private String addFilteringSql(String sql,Map<String, Object> map, ProductQueryParams productQueryParams) {
+		
+		if(productQueryParams.getCategory() != null) {
+			sql=sql+" AND category=:category";
+			map.put("category", productQueryParams.getCategory().name());
+		}
+		
+		if(productQueryParams.getSearch() !=null) {
+			sql=sql + " AND product_name LIKE :search";
+			map.put("search", "%"+productQueryParams.getSearch()+"%");
+		}
+		
+		return sql;
+	}
 
+	
 
 	
 	

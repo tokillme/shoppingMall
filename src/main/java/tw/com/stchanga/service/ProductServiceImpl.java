@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import tw.com.stchanga.constant.ProductCategory;
 import tw.com.stchanga.dao.ProductDao;
+import tw.com.stchanga.dto.ProductQueryParams;
 import tw.com.stchanga.dto.ProductRequest;
 import tw.com.stchanga.model.Product;
 
@@ -18,9 +19,9 @@ public class ProductServiceImpl implements ProductService{
 	private ProductDao productDao;
 	
 	@Override
-	public List<Product> getProducts(ProductCategory category,String search) {
+	public List<Product> getProducts(ProductQueryParams productQueryParams) {
 		
-		return productDao.getProducts(category,search);
+		return productDao.getProducts(productQueryParams);
 	}
 	
 	@Override
@@ -46,6 +47,12 @@ public class ProductServiceImpl implements ProductService{
 	public void deleteProduct(Integer productId) {
 		// TODO Auto-generated method stub
 		productDao.deleteProduct(productId);
+	}
+
+	@Override
+	public Integer countProduct(ProductQueryParams productQueryParams) {
+
+		return productDao.countProduct(productQueryParams);
 	}
 
 	
